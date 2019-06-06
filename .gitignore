@@ -28,3 +28,7 @@ parsertrace_g
 *.sdf
 *.vsp
 *.psess
+Debug/
+Release/
+x64/
+ipch/
