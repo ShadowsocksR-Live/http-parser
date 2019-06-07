@@ -27,6 +27,7 @@ struct http_headers * parse_http_heads(int request, const uint8_t *data, size_t 
 size_t http_heads_count(struct http_headers *headers);
 
 const char * http_heads_get_url(struct http_headers *headers);
+const char * http_heads_get_status(struct http_headers *headers);
 
 typedef void(*header_walker)(char *key, char *value, int *stop, void *p);
 void enumerate_http_headers(struct http_headers *headers, header_walker cb, void *p);

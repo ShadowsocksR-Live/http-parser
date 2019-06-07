@@ -20,6 +20,7 @@ struct http_headers {
     struct http_header *headers;
     int complete;
     char *url;
+    char *status;
     size_t content_beginning;
     uint8_t *origin_data; /* weak pointer */
     size_t origin_data_len;
@@ -55,7 +56,10 @@ static int on_url(http_parser *parser, const char *at, size_t length) {
     return 0;
 }
 
-static int on_status(http_parser* p, const char *at, size_t length) {
+static int on_status(http_parser* parser, const char *at, size_t length) {
+    struct http_headers *parsed_headers = (struct http_headers *)parser->data;
+    parsed_headers->status = (char *) calloc(length + 1, sizeof(char));
+    strncpy(parsed_headers->status, at, length);
     return 0;
 }
 
@@ -111,6 +115,10 @@ const char * http_heads_get_url(struct http_headers *headers) {
     return headers->url;
 }
 
+const char * http_heads_get_status(struct http_headers *headers) {
+    return headers->status;
+}
+
 void enumerate_http_headers(struct http_headers *headers, header_walker cb, void *p) {
     size_t i;
     if (headers==NULL || cb==NULL) {
@@ -151,9 +159,8 @@ void destroy_http_headers(struct http_headers *headers) {
     if (headers == NULL) {
         return;
     }
-    if (headers->url) {
-        free(headers->url);
-    }
+    if (headers->url) { free(headers->url); }
+    if (headers->status) { free(headers->status); }
     if (headers->headers) {
         enumerate_http_headers(headers, destroy_http_headers_cb, NULL);
         free(headers->headers);
