@@ -33,6 +33,8 @@ void enumerate_http_headers(struct http_headers *headers, header_walker cb, void
 
 const char * get_header_val(const struct http_headers *headers, const char *header_key);
 
+size_t get_http_body_beginning(const struct http_headers *headers);
+
 void destroy_http_headers(struct http_headers *headers);
 
 #ifdef __cplusplus
