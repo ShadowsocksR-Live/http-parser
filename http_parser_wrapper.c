@@ -20,7 +20,7 @@ struct http_headers {
     struct http_header *headers;
     int complete;
     char *url;
-    size_t body_beginning;
+    size_t content_beginning;
     uint8_t *origin_data; /* weak pointer */
     size_t origin_data_len;
 };
@@ -31,7 +31,8 @@ static int on_message_begin(http_parser* p) {
 }
 
 static int on_headers_complete(http_parser* parser) {
-    ((struct http_headers *)parser->data)->complete = 1;
+    struct http_headers *hdrs = (struct http_headers *) parser->data;
+    hdrs->complete = 1;
     return 0;
 }
 
@@ -97,8 +98,8 @@ static int on_header_value(http_parser* parser, const char *at, size_t length) {
 
 static int on_body(http_parser* p, const char *at, size_t length) {
     struct http_headers *hdrs = (struct http_headers *) p->data;
-    hdrs->body_beginning = (uint8_t *)at - hdrs->origin_data;
-    // assert(hdrs->origin_data_len == length + hdrs->body_beginning);
+    hdrs->content_beginning = (uint8_t *)at - hdrs->origin_data;
+    // assert(hdrs->origin_data_len == length + hdrs->content_beginning);
     return 0;
 }
 
@@ -137,8 +138,8 @@ const char * get_header_val(const struct http_headers *headers, const char *head
     return data.value;
 }
 
-size_t get_http_body_beginning(const struct http_headers *headers) {
-    return headers->body_beginning;
+size_t get_http_content_beginning(const struct http_headers *headers) {
+    return headers->content_beginning;
 }
 
 void destroy_http_headers_cb(char *key, char *value, int *stop, void *p) {
@@ -180,7 +181,7 @@ struct http_headers * parse_http_heads(int request, const uint8_t *data, size_t 
     parsed_headers = (struct http_headers *) calloc(1, sizeof(struct http_headers));
     parsed_headers->origin_data = (uint8_t *)data;
     parsed_headers->origin_data_len = data_len;
-    parsed_headers->body_beginning = data_len;
+    parsed_headers->content_beginning = data_len;
     parser.data = parsed_headers;
     http_parser_init(&parser, request ? HTTP_REQUEST : HTTP_RESPONSE);
 

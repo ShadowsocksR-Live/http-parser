@@ -25,20 +25,22 @@ static const char data[] =
     "Transfer-Encoding: chunked\r\n"
     "Cache-Control: max-age=0\r\n"
     "\r\n"
-    "b\r\nhello world\r\n0\r\n";
+    "b\r\n"
+    "hello world\r\n"
+    "0\r\n";
 static const size_t data_len = sizeof(data) - 1;
 
 static const char data2[] =
-        "GET /favicon.ico HTTP/1.1\r\n"
-         "Host: 0.0.0.0=5000\r\n"
-         "User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9) Gecko/2008061015 Firefox/3.0\r\n"
-         "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\r\n"
-         "Accept-Language: en-us,en;q=0.5\r\n"
-         "Accept-Encoding: gzip,deflate\r\n"
-         "Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7\r\n"
-         "Keep-Alive: 300\r\n"
-         "Connection: keep-alive\r\n"
-         "\r\n";
+    "GET /favicon.ico HTTP/1.1\r\n"
+    "Host: 0.0.0.0=5000\r\n"
+    "User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9) Gecko/2008061015 Firefox/3.0\r\n"
+    "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\r\n"
+    "Accept-Language: en-us,en;q=0.5\r\n"
+    "Accept-Encoding: gzip,deflate\r\n"
+    "Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7\r\n"
+    "Keep-Alive: 300\r\n"
+    "Connection: keep-alive\r\n"
+    "\r\n";
 static const size_t data2_len = sizeof(data2) - 1;
 
 static const char data3[] =
@@ -61,8 +63,10 @@ static const char data5[] =
     "POST /two_chunks_mult_zero_end HTTP/1.1\r\n"
     "Transfer-Encoding: chunked\r\n"
     "\r\n"
-    "5\r\nhello\r\n"
-    "6\r\n world\r\n"
+    "5\r\n"
+    "hello\r\n"
+    "6\r\n"
+    " world\r\n"
     "000\r\n"
     "\r\n";
 static const size_t data5_len = sizeof(data5) - 1;
@@ -87,42 +91,42 @@ static const char data6[] =
 static const size_t data6_len = sizeof(data6) - 1;
 
 int main(int argc, char** argv) {
-  int64_t iterations;
-  int i;
+    int64_t iterations;
+    int i;
 
-  iterations = kBytes / (int64_t) data_len;
+    iterations = kBytes / (int64_t) data_len;
 
-  for (i = 0; i < iterations; i++) {
-      struct http_headers *p = parse_http_heads(1, (uint8_t *)data, data_len);
-      get_header_val(p, "User-Agent");
-      printf("data1 body beginning %d\n", (int)get_http_body_beginning(p));
-      destroy_http_headers(p);
+    for (i = 0; i < iterations; i++) {
+        struct http_headers *p = parse_http_heads(1, (uint8_t *)data, data_len);
+        get_header_val(p, "User-Agent");
+        printf("data1 body beginning %d\n", (int)get_http_content_beginning(p));
+        destroy_http_headers(p);
 
-      p = parse_http_heads(1, (uint8_t *)data2, data2_len);
-      get_header_val(p, "User-Agent");
-      printf("data2 body beginning %d\n", (int)get_http_body_beginning(p));
-      destroy_http_headers(p);
+        p = parse_http_heads(1, (uint8_t *)data2, data2_len);
+        get_header_val(p, "User-Agent");
+        printf("data2 body beginning %d\n", (int)get_http_content_beginning(p));
+        destroy_http_headers(p);
 
-      p = parse_http_heads(1, (uint8_t *)data3, data3_len);
-      get_header_val(p, "User-Agent");
-      printf("data3 body beginning %d\n", (int)get_http_body_beginning(p));
-      destroy_http_headers(p);
+        p = parse_http_heads(1, (uint8_t *)data3, data3_len);
+        get_header_val(p, "User-Agent");
+        printf("data3 body beginning %d\n", (int)get_http_content_beginning(p));
+        destroy_http_headers(p);
 
-      p = parse_http_heads(1, (uint8_t *)data4, data4_len);
-      get_header_val(p, "User-Agent");
-      printf("data4 body beginning %d\n", (int)get_http_body_beginning(p));
-      destroy_http_headers(p);
+        p = parse_http_heads(1, (uint8_t *)data4, data4_len);
+        get_header_val(p, "User-Agent");
+        printf("data4 body beginning %d\n", (int)get_http_content_beginning(p));
+        destroy_http_headers(p);
 
-      p = parse_http_heads(1, (uint8_t *)data5, data5_len);
-      get_header_val(p, "User-Agent");
-      printf("data5 body beginning %d\n", (int)get_http_body_beginning(p));
-      destroy_http_headers(p);
+        p = parse_http_heads(1, (uint8_t *)data5, data5_len);
+        get_header_val(p, "User-Agent");
+        printf("data5 body beginning %d\n", (int)get_http_content_beginning(p));
+        destroy_http_headers(p);
 
-      p = parse_http_heads(0, (uint8_t *)data6, data6_len);
-      get_header_val(p, "Content-Length");
-      printf("data6 body beginning %d\n", (int)get_http_body_beginning(p));
-      destroy_http_headers(p);
+        p = parse_http_heads(0, (uint8_t *)data6, data6_len);
+        get_header_val(p, "Content-Length");
+        printf("data6 body beginning %d\n", (int)get_http_content_beginning(p));
+        destroy_http_headers(p);
 
-      printf("=====================================\n");
-  }
+        printf("=====================================\n");
+    }
 }
