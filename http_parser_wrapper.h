@@ -22,21 +22,21 @@ typedef unsigned __int64 uint64_t;
 
 struct http_headers;
 
-struct http_headers * parse_http_heads(int request, const uint8_t *data, size_t data_len);
+struct http_headers * http_headers_parse(int request, const uint8_t *data, size_t data_len);
 
-size_t http_heads_count(struct http_headers *headers);
+size_t http_headers_count(struct http_headers *headers);
 
-const char * http_heads_get_url(struct http_headers *headers);
-const char * http_heads_get_status(struct http_headers *headers);
+const char * http_headers_get_url(struct http_headers *headers);
+const char * http_headers_get_status(struct http_headers *headers);
 
 typedef void(*header_walker)(char *key, char *value, int *stop, void *p);
-void enumerate_http_headers(struct http_headers *headers, header_walker cb, void *p);
+void http_headers_enumerate(struct http_headers *headers, header_walker cb, void *p);
 
-const char * get_header_val(const struct http_headers *headers, const char *header_key);
+const char * http_headers_get_field_val(const struct http_headers *headers, const char *field);
 
-size_t get_http_content_beginning(const struct http_headers *headers);
+size_t http_headers_get_content_beginning(const struct http_headers *headers);
 
-void destroy_http_headers(struct http_headers *headers);
+void http_headers_destroy(struct http_headers *headers);
 
 #ifdef __cplusplus
 }

@@ -97,35 +97,36 @@ int main(int argc, char** argv) {
     iterations = kBytes / (int64_t) data_len;
 
     for (i = 0; i < iterations; i++) {
-        struct http_headers *p = parse_http_heads(1, (uint8_t *)data, data_len);
-        get_header_val(p, "User-Agent");
-        printf("data1 body beginning %d\n", (int)get_http_content_beginning(p));
-        destroy_http_headers(p);
+        struct http_headers *p;
+        p = http_headers_parse(1, (uint8_t *)data, data_len);
+        http_headers_get_field_val(p, "User-Agent");
+        printf("data1 body beginning %d\n", (int)http_headers_get_content_beginning(p));
+        http_headers_destroy(p);
 
-        p = parse_http_heads(1, (uint8_t *)data2, data2_len);
-        get_header_val(p, "User-Agent");
-        printf("data2 body beginning %d\n", (int)get_http_content_beginning(p));
-        destroy_http_headers(p);
+        p = http_headers_parse(1, (uint8_t *)data2, data2_len);
+        http_headers_get_field_val(p, "User-Agent");
+        printf("data2 body beginning %d\n", (int)http_headers_get_content_beginning(p));
+        http_headers_destroy(p);
 
-        p = parse_http_heads(1, (uint8_t *)data3, data3_len);
-        get_header_val(p, "User-Agent");
-        printf("data3 body beginning %d\n", (int)get_http_content_beginning(p));
-        destroy_http_headers(p);
+        p = http_headers_parse(1, (uint8_t *)data3, data3_len);
+        http_headers_get_field_val(p, "User-Agent");
+        printf("data3 body beginning %d\n", (int)http_headers_get_content_beginning(p));
+        http_headers_destroy(p);
 
-        p = parse_http_heads(1, (uint8_t *)data4, data4_len);
-        get_header_val(p, "User-Agent");
-        printf("data4 body beginning %d\n", (int)get_http_content_beginning(p));
-        destroy_http_headers(p);
+        p = http_headers_parse(1, (uint8_t *)data4, data4_len);
+        http_headers_get_field_val(p, "User-Agent");
+        printf("data4 body beginning %d\n", (int)http_headers_get_content_beginning(p));
+        http_headers_destroy(p);
 
-        p = parse_http_heads(1, (uint8_t *)data5, data5_len);
-        get_header_val(p, "User-Agent");
-        printf("data5 body beginning %d\n", (int)get_http_content_beginning(p));
-        destroy_http_headers(p);
+        p = http_headers_parse(1, (uint8_t *)data5, data5_len);
+        http_headers_get_field_val(p, "User-Agent");
+        printf("data5 body beginning %d\n", (int)http_headers_get_content_beginning(p));
+        http_headers_destroy(p);
 
-        p = parse_http_heads(0, (uint8_t *)data6, data6_len);
-        get_header_val(p, "Content-Length");
-        printf("data6 body beginning %d\n", (int)get_http_content_beginning(p));
-        destroy_http_headers(p);
+        p = http_headers_parse(0, (uint8_t *)data6, data6_len);
+        http_headers_get_field_val(p, "Content-Length");
+        printf("data6 body beginning %d\n", (int)http_headers_get_content_beginning(p));
+        http_headers_destroy(p);
 
         printf("=====================================\n");
     }

@@ -107,19 +107,19 @@ static int on_body(http_parser* p, const char *at, size_t length) {
     return 0;
 }
 
-size_t http_heads_count(struct http_headers *headers) {
+size_t http_headers_count(struct http_headers *headers) {
     return headers->count;
 }
 
-const char * http_heads_get_url(struct http_headers *headers) {
+const char * http_headers_get_url(struct http_headers *headers) {
     return headers->url;
 }
 
-const char * http_heads_get_status(struct http_headers *headers) {
+const char * http_headers_get_status(struct http_headers *headers) {
     return headers->status;
 }
 
-void enumerate_http_headers(struct http_headers *headers, header_walker cb, void *p) {
+void http_headers_enumerate(struct http_headers *headers, header_walker cb, void *p) {
     size_t i;
     if (headers==NULL || cb==NULL) {
         return;
@@ -132,7 +132,7 @@ void enumerate_http_headers(struct http_headers *headers, header_walker cb, void
     }
 }
 
-void get_header_val_cb(char *key, char *value, int *stop, void *p) {
+void http_headers_get_field_val_cb(char *key, char *value, int *stop, void *p) {
     struct http_header *data = (struct http_header*)p;
     if (strcmp(key, data->key) == 0) {
         data->value = value;
@@ -140,29 +140,29 @@ void get_header_val_cb(char *key, char *value, int *stop, void *p) {
     }
 }
 
-const char * get_header_val(const struct http_headers *headers, const char *header_key) {
-    struct http_header data = { (char *)header_key, NULL };
-    enumerate_http_headers((struct http_headers *)headers, get_header_val_cb, &data);
+const char * http_headers_get_field_val(const struct http_headers *headers, const char *field) {
+    struct http_header data = { (char *)field, NULL };
+    http_headers_enumerate((struct http_headers *)headers, http_headers_get_field_val_cb, &data);
     return data.value;
 }
 
-size_t get_http_content_beginning(const struct http_headers *headers) {
+size_t http_headers_get_content_beginning(const struct http_headers *headers) {
     return headers->content_beginning;
 }
 
-void destroy_http_headers_cb(char *key, char *value, int *stop, void *p) {
+void http_headers_destroy_cb(char *key, char *value, int *stop, void *p) {
     free(key);
     free(value);
 }
 
-void destroy_http_headers(struct http_headers *headers) {
+void http_headers_destroy(struct http_headers *headers) {
     if (headers == NULL) {
         return;
     }
     if (headers->url) { free(headers->url); }
     if (headers->status) { free(headers->status); }
     if (headers->headers) {
-        enumerate_http_headers(headers, destroy_http_headers_cb, NULL);
+        http_headers_enumerate(headers, http_headers_destroy_cb, NULL);
         free(headers->headers);
     }
     free(headers);
@@ -181,7 +181,7 @@ static http_parser_settings settings = {
     on_chunk_complete,
 };
 
-struct http_headers * parse_http_heads(int request, const uint8_t *data, size_t data_len) {
+struct http_headers * http_headers_parse(int request, const uint8_t *data, size_t data_len) {
     struct http_parser parser = { 0 };
     size_t parsed;
     struct http_headers *parsed_headers;
