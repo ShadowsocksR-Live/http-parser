@@ -27,81 +27,81 @@ struct http_headers {
 };
 
 
-static int on_message_begin(http_parser* p) {
+static int on_message_begin(http_parser *parser) {
     return 0;
 }
 
-static int on_headers_complete(http_parser* parser) {
+static int on_headers_complete(http_parser *parser) {
     struct http_headers *hdrs = (struct http_headers *) parser->data;
     hdrs->complete = 1;
     return 0;
 }
 
-static int on_message_complete(http_parser* p) {
+static int on_message_complete(http_parser *parser) {
     return 0;
 }
 
-static int on_chunk_header(http_parser* p) {
+static int on_chunk_header(http_parser *parser) {
     return 0;
 }
 
-static int on_chunk_complete(http_parser* p) {
+static int on_chunk_complete(http_parser *parser) {
     return 0;
 }
 
 static int on_url(http_parser *parser, const char *at, size_t length) {
-    struct http_headers *parsed_headers = (struct http_headers *)parser->data;
-    parsed_headers->url = (char *) calloc(length + 1, sizeof(char));
-    strncpy(parsed_headers->url, at, length);
+    struct http_headers *hdrs = (struct http_headers *)parser->data;
+    hdrs->url = (char *) calloc(length + 1, sizeof(char));
+    strncpy(hdrs->url, at, length);
     return 0;
 }
 
 static int on_status(http_parser* parser, const char *at, size_t length) {
-    struct http_headers *parsed_headers = (struct http_headers *)parser->data;
-    parsed_headers->status = (char *) calloc(length + 1, sizeof(char));
-    strncpy(parsed_headers->status, at, length);
+    struct http_headers *hdrs = (struct http_headers *)parser->data;
+    hdrs->status = (char *) calloc(length + 1, sizeof(char));
+    strncpy(hdrs->status, at, length);
     return 0;
 }
 
 static int on_header_field(http_parser* parser, const char *at, size_t length) {
-    struct http_headers *parsed_headers = (struct http_headers *)parser->data;
+    struct http_headers *hdrs = (struct http_headers *)parser->data;
     char *key;
 
-    if (parsed_headers->count >= parsed_headers->capacity) {
-        if (parsed_headers->capacity == 0) {
-            assert(parsed_headers->headers == NULL);
-            parsed_headers->capacity = MAX_HTTP_HEADERS;
-            parsed_headers->headers = (struct http_header *)
-                calloc(parsed_headers->capacity, sizeof(struct http_header));
+    if (hdrs->count >= hdrs->capacity) {
+        if (hdrs->capacity == 0) {
+            assert(hdrs->headers == NULL);
+            hdrs->capacity = MAX_HTTP_HEADERS;
+            hdrs->headers = (struct http_header *)
+                calloc(hdrs->capacity, sizeof(struct http_header));
         } else {
-            parsed_headers->capacity *= 2;
-            parsed_headers->headers = (struct http_header *)
-                realloc(parsed_headers->headers, parsed_headers->capacity * sizeof(struct http_header));
+            hdrs->capacity *= 2;
+            hdrs->headers = (struct http_header *)
+                realloc(hdrs->headers, hdrs->capacity * sizeof(struct http_header));
         }
     }
 
     key = (char *) calloc(1, length + 1);
     strncpy(key, at, length);
 
-    parsed_headers->headers[parsed_headers->count].key = key;
+    hdrs->headers[hdrs->count].key = key;
 
     return 0;
 }
 
 static int on_header_value(http_parser* parser, const char *at, size_t length) {
-    struct http_headers *parsed_headers = (struct http_headers *) parser->data;
+    struct http_headers *hdrs = (struct http_headers *) parser->data;
 
     char *value = (char *) calloc(1, length + 1);
     strncpy(value, at, length);
 
-    parsed_headers->headers[parsed_headers->count].value = value;
-    parsed_headers->count++;
+    hdrs->headers[hdrs->count].value = value;
+    hdrs->count++;
 
     return 0;
 }
 
-static int on_body(http_parser* p, const char *at, size_t length) {
-    struct http_headers *hdrs = (struct http_headers *) p->data;
+static int on_body(http_parser* parser, const char *at, size_t length) {
+    struct http_headers *hdrs = (struct http_headers *) parser->data;
     hdrs->content_beginning = (uint8_t *)at - hdrs->origin_data;
     // assert(hdrs->origin_data_len == length + hdrs->content_beginning);
     return 0;
@@ -184,15 +184,44 @@ static http_parser_settings settings = {
 struct http_headers * http_headers_parse(int request, const uint8_t *data, size_t data_len) {
     struct http_parser parser = { 0 };
     size_t parsed;
-    struct http_headers *parsed_headers;
-    parsed_headers = (struct http_headers *) calloc(1, sizeof(struct http_headers));
-    parsed_headers->origin_data = (uint8_t *)data;
-    parsed_headers->origin_data_len = data_len;
-    parsed_headers->content_beginning = data_len;
-    parser.data = parsed_headers;
+    struct http_headers *hdrs;
+    hdrs = (struct http_headers *) calloc(1, sizeof(struct http_headers));
+    hdrs->origin_data = (uint8_t *)data;
+    hdrs->origin_data_len = data_len;
+    hdrs->content_beginning = data_len;
+    parser.data = hdrs;
     http_parser_init(&parser, request ? HTTP_REQUEST : HTTP_RESPONSE);
 
     parsed = http_parser_execute(&parser, &settings, (char *)data, data_len);
     assert(parsed == data_len);
-    return parsed_headers;
+    return hdrs;
+}
+
+const uint8_t * extract_http_body(const uint8_t *http_pkg, size_t size, size_t *data_size) {
+    char *ptmp = (char *)http_pkg;
+    size_t len0 = (size_t)size;
+    size_t read_len = (size_t)size;
+    char *px = NULL;
+
+#define GET_REQUEST_END "\r\n\r\n"
+    px = strstr((char *)http_pkg, GET_REQUEST_END);
+    if (px != NULL) {
+        ptmp = px + strlen(GET_REQUEST_END);
+        len0 = len0 - (size_t)(ptmp - (char *)http_pkg);
+    }
+
+#define CONTENT_LENGTH "Content-Length:"
+    px = strstr((char *)http_pkg, CONTENT_LENGTH);
+    if (px) {
+        px = px + strlen(CONTENT_LENGTH);
+        read_len = (size_t) strtol(px, NULL, 10);
+    }
+    if (read_len == len0) {
+        if (data_size) {
+            *data_size = len0;
+        }
+    } else {
+        ptmp = (char *)http_pkg;
+    }
+    return (uint8_t *)ptmp;
 }

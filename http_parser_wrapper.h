@@ -38,6 +38,8 @@ size_t http_headers_get_content_beginning(const struct http_headers *headers);
 
 void http_headers_destroy(struct http_headers *headers);
 
+const uint8_t * extract_http_body(const uint8_t *http_pkg, size_t size, size_t *data_size);
+
 #ifdef __cplusplus
 }
 #endif
