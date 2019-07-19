@@ -90,6 +90,17 @@ static const char data6[] =
     "</BODY></HTML>\r\n";
 static const size_t data6_len = sizeof(data6) - 1;
 
+static const char data7[] =
+    "HTTP/1.1 101 Switching Protocols\r\n"
+    "Server: nginx/1.17.0\r\n"
+    "Date: Fri, 19 Jul 2019 08:47:19 GMT\r\n"
+    "Connection: upgrade\r\n"
+    "Upgrade: websocket\r\n"
+    "Sec-WebSocket-Accept: VWwDIBVDiS1C7IvkdC2eYvlC38M=\r\n"
+    "\r\n"
+    "\x90\x03\x08\x09";
+static const size_t data7_len = sizeof(data7) - 1;
+
 int main(int argc, char** argv) {
     int64_t iterations;
     int i;
@@ -126,6 +137,11 @@ int main(int argc, char** argv) {
         p = http_headers_parse(0, (uint8_t *)data6, data6_len);
         http_headers_get_field_val(p, "Content-Length");
         printf("data6 body beginning %d\n", (int)http_headers_get_content_beginning(p));
+        http_headers_destroy(p);
+
+        p = http_headers_parse(0, (uint8_t *)data7, data7_len);
+        http_headers_get_field_val(p, "Content-Length");
+        printf("data7 body beginning %d\n", (int)http_headers_get_content_beginning(p));
         http_headers_destroy(p);
 
         printf("=====================================\n");

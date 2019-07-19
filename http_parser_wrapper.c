@@ -181,6 +181,8 @@ static http_parser_settings settings = {
     on_chunk_complete,
 };
 
+static const uint8_t * memory_search(const uint8_t *mem, size_t size, const uint8_t *submem, size_t subsize);
+
 struct http_headers * http_headers_parse(int request, const uint8_t *data, size_t data_len) {
     struct http_parser parser = { 0 };
     size_t parsed;
@@ -193,35 +195,29 @@ struct http_headers * http_headers_parse(int request, const uint8_t *data, size_
     http_parser_init(&parser, request ? HTTP_REQUEST : HTTP_RESPONSE);
 
     parsed = http_parser_execute(&parser, &settings, (char *)data, data_len);
-    assert(parsed == data_len);
+    if (parsed != 0 && (parsed != data_len)) {
+#define GET_REQUEST_END "\r\n\r\n"
+        const uint8_t *hdr_end =
+            memory_search(data, data_len, GET_REQUEST_END, strlen(GET_REQUEST_END));
+        if (hdr_end) {
+            hdr_end += strlen(GET_REQUEST_END);
+            hdrs->content_beginning = hdr_end - data;
+        }
+    }
+
     return hdrs;
 }
 
-const uint8_t * extract_http_body(const uint8_t *http_pkg, size_t size, size_t *data_size) {
-    char *ptmp = (char *)http_pkg;
-    size_t len0 = (size_t)size;
-    size_t read_len = (size_t)size;
-    char *px = NULL;
-
-#define GET_REQUEST_END "\r\n\r\n"
-    px = strstr((char *)http_pkg, GET_REQUEST_END);
-    if (px != NULL) {
-        ptmp = px + strlen(GET_REQUEST_END);
-        len0 = len0 - (size_t)(ptmp - (char *)http_pkg);
+static const uint8_t * memory_search(const uint8_t *mem, size_t size, const uint8_t *submem, size_t subsize) {
+    const uint8_t *end = mem + (size - subsize);
+    if (mem==NULL || size==0 || submem==NULL || subsize==0) {
+        return NULL;
     }
-
-#define CONTENT_LENGTH "Content-Length:"
-    px = strstr((char *)http_pkg, CONTENT_LENGTH);
-    if (px) {
-        px = px + strlen(CONTENT_LENGTH);
-        read_len = (size_t) strtol(px, NULL, 10);
-    }
-    if (read_len == len0) {
-        if (data_size) {
-            *data_size = len0;
+    while (mem != end) {
+        if (memcmp(mem, submem, subsize) == 0) {
+            return mem;
         }
-    } else {
-        ptmp = (char *)http_pkg;
+        ++mem;
     }
-    return (uint8_t *)ptmp;
+    return NULL;
 }
