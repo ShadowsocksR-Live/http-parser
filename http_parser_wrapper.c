@@ -22,6 +22,7 @@ struct http_headers {
     char *url;
     char *status;
     size_t content_beginning;
+    size_t parsed_len;
     uint8_t *origin_data; /* weak pointer */
     size_t origin_data_len;
 };
@@ -150,6 +151,10 @@ size_t http_headers_get_content_beginning(const struct http_headers *headers) {
     return headers->content_beginning;
 }
 
+size_t http_headers_get_parsed_length(const struct http_headers *headers) {
+    return headers->parsed_len;
+}
+
 void http_headers_destroy_cb(char *key, char *value, int *stop, void *p) {
     free(key);
     free(value);
@@ -195,6 +200,7 @@ struct http_headers * http_headers_parse(int request, const uint8_t *data, size_
     http_parser_init(&parser, request ? HTTP_REQUEST : HTTP_RESPONSE);
 
     parsed = http_parser_execute(&parser, &settings, (char *)data, data_len);
+    hdrs->parsed_len = parsed;
     if (parsed != 0 && (parsed != data_len)) {
 #define GET_REQUEST_END "\r\n\r\n"
         const uint8_t *hdr_end =

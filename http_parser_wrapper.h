@@ -35,6 +35,7 @@ void http_headers_enumerate(struct http_headers *headers, header_walker cb, void
 const char * http_headers_get_field_val(const struct http_headers *headers, const char *field);
 
 size_t http_headers_get_content_beginning(const struct http_headers *headers);
+size_t http_headers_get_parsed_length(const struct http_headers *headers);
 
 void http_headers_destroy(struct http_headers *headers);
 
