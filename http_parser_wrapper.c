@@ -204,7 +204,7 @@ struct http_headers * http_headers_parse(int request, const uint8_t *data, size_
     if (parsed != 0 && (parsed != data_len)) {
 #define GET_REQUEST_END "\r\n\r\n"
         const uint8_t *hdr_end =
-            memory_search(data, data_len, GET_REQUEST_END, strlen(GET_REQUEST_END));
+            memory_search(data, data_len, (const uint8_t *)GET_REQUEST_END, strlen(GET_REQUEST_END));
         if (hdr_end) {
             hdr_end += strlen(GET_REQUEST_END);
             hdrs->content_beginning = hdr_end - data;
