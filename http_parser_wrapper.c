@@ -29,6 +29,7 @@ struct http_headers {
 
 
 static int on_message_begin(http_parser *parser) {
+    (void)parser;
     return 0;
 }
 
@@ -39,14 +40,17 @@ static int on_headers_complete(http_parser *parser) {
 }
 
 static int on_message_complete(http_parser *parser) {
+    (void)parser;
     return 0;
 }
 
 static int on_chunk_header(http_parser *parser) {
+    (void)parser;
     return 0;
 }
 
 static int on_chunk_complete(http_parser *parser) {
+    (void)parser;
     return 0;
 }
 
@@ -103,6 +107,7 @@ static int on_header_value(http_parser* parser, const char *at, size_t length) {
 
 static int on_body(http_parser* parser, const char *at, size_t length) {
     struct http_headers *hdrs = (struct http_headers *) parser->data;
+    (void)length;
     hdrs->content_beginning = (uint8_t *)at - hdrs->origin_data;
     // assert(hdrs->origin_data_len == length + hdrs->content_beginning);
     return 0;
@@ -156,6 +161,7 @@ size_t http_headers_get_parsed_length(const struct http_headers *headers) {
 }
 
 void http_headers_destroy_cb(char *key, char *value, int *stop, void *p) {
+    (void)stop; (void)p;
     free(key);
     free(value);
 }
