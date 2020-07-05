@@ -731,6 +731,7 @@ reexecute:
         if (ch == CR || ch == LF)
           break;
         parser->flags = 0;
+        parser->extra_flags = 0;
         parser->content_length = ULLONG_MAX;
 
         if (ch == 'H') {
@@ -768,6 +769,7 @@ reexecute:
         if (ch == CR || ch == LF)
           break;
         parser->flags = 0;
+        parser->extra_flags = 0;
         parser->content_length = ULLONG_MAX;
 
         if (ch == 'H') {
@@ -925,6 +927,7 @@ reexecute:
         if (ch == CR || ch == LF)
           break;
         parser->flags = 0;
+        parser->extra_flags = 0;
         parser->content_length = ULLONG_MAX;
 
         if (UNLIKELY(!IS_ALPHA(ch))) {
@@ -1338,7 +1341,7 @@ reexecute:
                 parser->header_state = h_general;
               } else if (parser->index == sizeof(TRANSFER_ENCODING)-2) {
                 parser->header_state = h_transfer_encoding;
-                parser->flags |= F_TRANSFER_ENCODING;
+                parser->extra_flags |= F_TRANSFER_ENCODING >> 8;
               }
               break;
 
@@ -1800,7 +1803,7 @@ reexecute:
 
         /* Cannot us transfer-encoding and a content-length header together
            per the HTTP specification. (RFC 7230 Section 3.3.3) */
-        if ((parser->flags & F_TRANSFER_ENCODING) &&
+        if ((parser->extra_flags & (F_TRANSFER_ENCODING >> 8)) &&
             (parser->flags & F_CONTENTLENGTH)) {
           /* Allow it for lenient parsing as long as `Transfer-Encoding` is
            * not `chunked`
@@ -1886,7 +1889,7 @@ reexecute:
           /* chunked encoding - ignore Content-Length header,
            * prepare for a chunk */
           UPDATE_STATE(s_chunk_size_start);
-        } else if (parser->flags & F_TRANSFER_ENCODING) {
+        } else if (parser->extra_flags & (F_TRANSFER_ENCODING >> 8)) {
           if (parser->type == HTTP_REQUEST && !lenient) {
             /* RFC 7230 3.3.3 */
 
@@ -2162,7 +2165,7 @@ http_message_needs_eof (const http_parser *parser)
   }
 
   /* RFC 7230 3.3.3, see `s_headers_almost_done` */
-  if ((parser->flags & F_TRANSFER_ENCODING) &&
+  if ((parser->extra_flags & (F_TRANSFER_ENCODING >> 8)) &&
       (parser->flags & F_CHUNKED) == 0) {
     return 1;
   }
@@ -2514,7 +2517,7 @@ http_parser_parse_url(const char *buf, size_t buflen, int is_connect,
     end = buf + off + len;
 
     /* NOTE: The characters are already validated and are in the [0-9] range */
-    assert(off + len <= (uint16_t)buflen && "Port number overflow");
+    assert((size_t) (off + len) <= buflen && "Port number overflow");
     v = 0;
     for (p = buf + off; p < end; p++) {
       v *= 10;
