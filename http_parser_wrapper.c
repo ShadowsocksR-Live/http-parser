@@ -140,7 +140,10 @@ void http_headers_enumerate(struct http_headers *headers, header_walker cb, void
 
 void http_headers_get_field_val_cb(char *key, char *value, int *stop, void *p) {
     struct http_header *data = (struct http_header*)p;
-    if (strcmp(key, data->key) == 0) {
+#ifdef _MSC_VER
+#define strcasecmp _stricmp
+#endif
+    if (strcasecmp(key, data->key) == 0) {
         data->value = value;
         if (stop) { *stop = 1; }
     }
